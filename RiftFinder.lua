@@ -16,6 +16,9 @@ local HOOK = getgenv().HOOK
 local CONFIG = getgenv().CONFIG
 
 -- private globals --
+local M = getgenv().M or {}
+getgenv().M = M
+
 M.currentServer = M.currentServer or 0
 
 if not M.serverList then
