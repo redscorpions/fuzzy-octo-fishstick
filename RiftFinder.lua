@@ -78,7 +78,7 @@ local function ServerHop()
 
     -- perform the teleport
     local success, err = pcall(function()
-        TeleportService:Teleport(M.serverList[M.currentServer].id, { Players.LocalPlayer })
+        TeleportService:Teleport(M.serverList[M.currentServer].id)
     end)
 
     if not success then
