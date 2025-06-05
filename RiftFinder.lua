@@ -78,7 +78,7 @@ local function ServerHop()
 
     -- perform the teleport
     local success, err = pcall(function()
-        TeleportService:Teleport(M.serverList[M.currentServer].id)
+        TeleportService:TeleportToPlaceInstance(PLACE_ID, M.serverList[M.currentServer].id)
     end)
 
     if not success then
