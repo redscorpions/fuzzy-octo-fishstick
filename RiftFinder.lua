@@ -67,17 +67,18 @@ local function ServerHop()
 
     -- queue the script to run after teleport
     if queue_on_teleport then
-        queue_on_teleport(string.format([[
-            getgenv().PROXY_URL = %q
-            getgenv().HOOK = %q
-            getgenv().CONFIG = %q
-            getgenv().M = %s
-            loadstring(game:HttpGet('https://raw.githubusercontent.com/redscorpions/fuzzy-octo-fishstick/refs/heads/main/RiftFinder.lua'))()
-        ]], 
-        PROXY_URL,
-        HOOK,
-        HttpService:JSONEncode(CONFIG),
-        HttpService:JSONEncode(M)))
+        -- queue_on_teleport(string.format([[
+        --     getgenv().PROXY_URL = %q
+        --     getgenv().HOOK = %q
+        --     getgenv().CONFIG = %q
+        --     getgenv().M = %s
+        --     loadstring(game:HttpGet('https://raw.githubusercontent.com/redscorpions/fuzzy-octo-fishstick/refs/heads/main/RiftFinder.lua'))()
+        -- ]], 
+        -- PROXY_URL,
+        -- HOOK,
+        -- HttpService:JSONEncode(CONFIG),
+        -- HttpService:JSONEncode(M)))
+        queue_on_teleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/redscorpions/fuzzy-octo-fishstick/refs/heads/main/RiftFinder.lua'))()")
     end
 
     -- perform the teleport
