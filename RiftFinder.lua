@@ -16,7 +16,7 @@ local HOOK = getgenv().HOOK
 local CONFIG = getgenv().CONFIG
 
 -- private globals --
-M.currentServer = M.currentServer or 0
+M.currentServer = M.currentServer or 1
 
 if not M.serverList then
     local success, response = pcall(function()
@@ -56,7 +56,7 @@ end
 local function ServerHop()
     -- manage server index --
     if M.currentServer >= #M.serverList then
-        M.currentServer = 0
+        M.currentServer = 1
     else
         M.currentServer = M.currentServer + 1
     end
