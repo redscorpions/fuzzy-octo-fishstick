@@ -1,5 +1,5 @@
 -- wait for game to load --
-task.wait(5)
+task.wait(15)
 
 -- services --
 local HttpService = game:GetService("HttpService")
