@@ -40,6 +40,7 @@ end
 
 for i, v in pairs(M.serverList) do
     print(i, v.id)
+    print(v.id, v.maxPlayers, v.ping, v.fps, v.playing)
 end
 
 -- auxiliary --
