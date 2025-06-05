@@ -16,7 +16,7 @@ local HOOK = getgenv().HOOK
 local CONFIG = getgenv().CONFIG
 
 -- private globals --
-M.currentServer = M.currentServer or 1
+M.currentServer = M.currentServer or 0
 
 if not M.serverList then
     local success, response = pcall(function()
@@ -57,7 +57,7 @@ end
 local function ServerHop()
     -- manage server index --
     if M.currentServer >= #M.serverList then
-        M.currentServer = 1
+        M.currentServer = 0
     else
         M.currentServer = M.currentServer + 1
     end
@@ -80,7 +80,7 @@ local function ServerHop()
     -- perform the teleport
     local success, err = pcall(function()
         print(M.serverList[M.currentServer].id)
-        --TeleportService:TeleportToPlaceInstance(PLACE_ID, M.serverList[M.currentServer].id, Players.LocalPlayer)
+        TeleportService:TeleportToPlaceInstance(PLACE_ID, M.serverList[M.currentServer].id, Players.LocalPlayer)
     end)
 
     if not success then
