@@ -78,6 +78,7 @@ local function ServerHop()
 
     -- perform the teleport
     local success, err = pcall(function()
+        print(M.serverList[M.currentServer].id)
         TeleportService:TeleportToPlaceInstance(PLACE_ID, M.serverList[M.currentServer].id, Players.LocalPlayer)
     end)
 
