@@ -213,6 +213,26 @@ local function ParseTimeToSeconds(timeStr)
     end
 end
 
+-- === Rift Images ===
+local IMAGES = {
+    ["x5"] = "https://static.wikia.nocookie.net/bgs-infinity/images/5/5b/Common_Egg.png/revision/latest?cb=20250412180346",
+    ["x10"] = "https://static.wikia.nocookie.net/bgs-infinity/images/5/5b/Common_Egg.png/revision/latest?cb=20250412180346",
+    ["silly-egg"] = "https://static.wikia.nocookie.net/bgs-infinity/images/3/3a/Silly_Egg.png/revision/latest?cb=20250430025645",
+    ["void-egg"] = "https://static.wikia.nocookie.net/bgs-infinity/images/5/58/Void_Egg.png/revision/latest?cb=20250412180803",
+    ["nightmare-egg"] = "https://static.wikia.nocookie.net/bgs-infinity/images/4/43/Nightmare_Egg.png/revision/latest?cb=20250412170032",
+    ["rainbow-egg"] = "https://static.wikia.nocookie.net/bgs-infinity/images/3/3f/Rainbow_Egg.png/revision/latest?cb=20250412180318",
+    ["cyber-egg"] = "https://static.wikia.nocookie.net/bgs-infinity/images/7/7b/Cyber_Egg.png/revision/latest?cb=20250505010121",
+    ["neon-egg"] = "https://static.wikia.nocookie.net/bgs-infinity/images/b/b1/Neon_Egg.png/revision/latest?cb=20250517192412",
+    ["underworld-0"] = "https://static.wikia.nocookie.net/bgs-infinity/images/f/ff/Underworld_Egg.png/revision/latest?cb=20250510201410",
+    ["underworld-1"] = "https://static.wikia.nocookie.net/bgs-infinity/images/f/ff/Underworld_Egg.png/revision/latest?cb=20250510201410",
+    ["underworld-2"] = "https://static.wikia.nocookie.net/bgs-infinity/images/f/ff/Underworld_Egg.png/revision/latest?cb=20250510201410",
+    ["underworld-3"] = "https://static.wikia.nocookie.net/bgs-infinity/images/f/ff/Underworld_Egg.png/revision/latest?cb=20250510201410",
+    ["bubble-rift"] = "https://static.wikia.nocookie.net/bgs-infinity/images/0/0c/Bubbles.png/revision/latest/scale-to-width-down/25?cb=20250430031457",
+    ["royal-chest"] = "https://static.wikia.nocookie.net/bgs-infinity/images/e/eb/Royal_Key.png/revision/latest?cb=20250412204328",
+    ["dice-chest"] = "https://static.wikia.nocookie.net/bgs-infinity/images/e/e4/Dice_Key.png/revision/latest?cb=20250505071325"
+    ["rift-vendor"] = "https://static.wikia.nocookie.net/bgs-infinity/images/7/73/Fruit_Egg.png/revision/latest?cb=20250525203558",
+}
+
 -- === Rift Finder ===
 local function CheckRifts()
     local riftsFolder = game.Workspace:FindFirstChild("Rendered") and game.Workspace.Rendered:FindFirstChild("Rifts")
@@ -236,6 +256,11 @@ local function CheckRifts()
         local timeInSeconds = ParseTimeToSeconds(timer)
         local expireTimestamp = os.time() + timeInSeconds
 
+        -- === Add Image ===
+        local imageURL = IMAGES[objName]
+        if imageURL then
+            embed.image = { url = imageURL }
+        end
 
         -- Build base embed
         local embed = {
@@ -260,6 +285,14 @@ local function CheckRifts()
             if luckText and string.gsub(luckText, "[%a%s]", "") == "25" then
                 embed.title = embed.title .. " x25"
                 print("Found x25 egg:", objName)
+                shouldSend = true
+            elseif luckText and string.gsub(luckText, "[%a%s]", "") == "10" then
+                embed.title = "x10"
+                print("Found x10 egg:", objName)
+                shouldSend = true
+            elseif luckText and string.gsub(luckText, "[%a%s]", "") == "5" then
+                embed.title = "x5"
+                print("Found x5 egg:", objName)
                 shouldSend = true
             end
 
