@@ -213,7 +213,7 @@ local function CheckRifts()
             print("Found x25 rift")
             embed.title = embed.title .. " " .. luckText
         else
-            continue
+            -- continue
         end
 
         local payload = {
