@@ -1,3 +1,4 @@
+
 -- === Prevent double execution ===
 if getgenv().RIFT_LOADED then
     warn("[RiftFinder] Already loaded. Skipping.")
@@ -19,6 +20,7 @@ local JOB_ID = game.JobId
 local PLACE_ID = game.PlaceId
 
 -- === Globals ===
+local SECRET = getgenv().SECRET
 local PROXY_URL = getgenv().PROXY_URL
 local HOOKS = getgenv().HOOKS
 getgenv().CONFIG = getgenv().CONFIG or { "Nothing" }
@@ -91,6 +93,7 @@ local function TeleportAndReinject(placeId, jobId)
     end
 
     local queueCode = string.format([[
+        getgenv().SECRET = %s
         getgenv().PROXY_URL = %q
         getgenv().HOOKS = game:GetService("HttpService"):JSONDecode(%q)
         getgenv().CONFIG = game:GetService("HttpService"):JSONDecode(%q)
@@ -98,6 +101,7 @@ local function TeleportAndReinject(placeId, jobId)
         getgenv().RIFT_LOADED = nil
         loadstring(game:HttpGet("https://raw.githubusercontent.com/redscorpions/fuzzy-octo-fishstick/main/RiftFinder.lua"))()
     ]],
+    SECRET,
     PROXY_URL,
     HttpService:JSONEncode(HOOKS),
     HttpService:JSONEncode(CONFIG),
@@ -283,21 +287,18 @@ local function CheckRifts()
             color = 5814783
         }
 
-        if not PLACE_ID or not JOB_ID then
-            warn("[Webhook] PLACE_ID or JOB_ID is missing. Skipping embed field.")
-        else
-            local robloxJoinLink = string.format(
-                "https://www.roblox.com/games/%d/Join?gameInstanceId=%s",
-                PLACE_ID,
-                JOB_ID
-            )
+        local joinLink = string.format(
+            "https://yourworker.workers.dev/join?placeId=%d&gameInstanceId=%s&token=%s",
+            PLACE_ID,
+            JOB_ID,
+            getgenv().SECRET
+        )
 
-            embed.fields = { {
-                name = "Join Link",
-                value = "[Click here to join the server](" .. robloxJoinLink .. ")",
-                inline = false
-            } }
-        end
+        embed.fields = { {
+            name = "Join Link",
+            value = "[Click here to join the server](" .. robloxJoinLink .. ")",
+            inline = false
+        } }
 
         -- === Add Image ===
         local imageURL = IMAGES[objName]
