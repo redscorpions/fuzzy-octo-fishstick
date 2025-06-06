@@ -43,25 +43,29 @@ local M = getgenv().M
 M.currentServer = M.currentServer or 0
 
 -- === Fetch server list if needed ===
-if not M.serverList then
-    local success, response = pcall(function()
-        return HttpService:RequestAsync({
-            Url = PROXY_URL,
-            Method = "GET",
-            Headers = {
-                ["Content-Type"] = "application/json"
-            }
-        })
-    end)
+local function FetchServerList()
+    if not M.serverList then
+        local success, response = pcall(function()
+            return HttpService:RequestAsync({
+                Url = PROXY_URL,
+                Method = "GET",
+                Headers = {
+                    ["Content-Type"] = "application/json"
+                }
+            })
+        end)
 
-    if success and response.Success then
-        local data = HttpService:JSONDecode(response.Body)
-        M.serverList = data.data or {}
-    else
-        warn("Failed to get server list: " .. tostring(response and response.StatusMessage or "Unknown error"))
-        M.serverList = {}
+        if success and response.Success then
+            local data = HttpService:JSONDecode(response.Body)
+            M.serverList = data.data or {}
+        else
+            warn("Failed to get server list: " .. tostring(response and response.StatusMessage or "Unknown error"))
+            M.serverList = {}
+        end
     end
 end
+
+FetchServerList()
 
 -- === Debug: Print server list ===
 for i, v in pairs(M.serverList) do
@@ -107,6 +111,21 @@ local function TeleportAndReinject(placeId, jobId)
 
     if not success then
         warn("Teleport failed: " .. tostring(err))
+        task.wait(2)
+
+        -- Try next server
+        M.currentServer = M.currentServer + 1
+        if M.currentServer >= #M.serverList then
+            M.currentServer = 0
+            FetchServerList() -- Refresh the list
+        end
+
+        local nextServer = M.serverList[M.currentServer]
+        if nextServer and nextServer.id then
+            TeleportAndReinject(placeId, nextServer.id)
+        else
+            warn("No valid servers left.")
+        end
     end
 end
 
@@ -114,18 +133,20 @@ end
 local function ServerHop()
     if #M.serverList == 0 then
         warn("Server list is empty.")
+        FetchServerList()
         return
     end
 
+    M.currentServer = M.currentServer + 1
+
     if M.currentServer >= #M.serverList then
         M.currentServer = 0
-    else
-        M.currentServer = M.currentServer + 1
+        FetchServerList()
     end
 
     local server = M.serverList[M.currentServer]
     if not server or not server.id then
-        warn("Invalid server data")
+        warn("Invalid server data.")
         return
     end
 
@@ -191,6 +212,8 @@ local function CheckRifts()
         if luckText and string.gsub(luckText, "[%a%s]", "") == "25" then
             print("Found x25 rift")
             embed.title = embed.title .. " " .. luckText
+        else
+            continue
         end
 
         local payload = {
