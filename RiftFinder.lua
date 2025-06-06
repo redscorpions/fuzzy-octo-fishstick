@@ -42,10 +42,6 @@ getgenv().M = getgenv().M or {}
 local M = getgenv().M
 M.currentServer = M.currentServer or 0
 
-print(getgenv().HOOKS)
-print(HttpService:JSONEncode(getgenv().HOOKS))
-print(HttpService:JSONDecode(getgenv().HOOKS))
-
 -- === Fetch server list if needed ===
 local function FetchServerList()
     if not M.serverList then
