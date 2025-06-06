@@ -1,4 +1,3 @@
-
 -- === Prevent double execution ===
 if getgenv().RIFT_LOADED then
     warn("[RiftFinder] Already loaded. Skipping.")
@@ -262,7 +261,7 @@ local function CheckRifts()
 
         local objName = obj.Name
         local lowerName = string.lower(objName)
-        local webhookKey = objName  -- 🔑 Start with original name
+        local webhookKey = objName
 
         local sign = obj:FindFirstChild("Display") and obj.Display:FindFirstChild("SurfaceGui")
         if not sign then continue end
@@ -272,6 +271,8 @@ local function CheckRifts()
         local timeInSeconds = ParseTimeToSeconds(timer)
         local expireTimestamp = os.time() + timeInSeconds
 
+        local joinLink = string.format("https://www.roblox.com/games/%d/?jobId=%s", PLACE_ID, JOB_ID)
+
         -- Build base embed
         local embed = {
             title = objName,
@@ -280,7 +281,8 @@ local function CheckRifts()
                         "\n**Expires:** <t:" .. expireTimestamp .. ":R>" ..
                         "\n**PlaceId:** `" .. PLACE_ID .. "`" ..
                         "\n**JobId:** `" .. JOB_ID .. "`" ..
-                        "\n**By:** `" .. Players.LocalPlayer.Name .. "`",
+                        "\n**By:** `" .. Players.LocalPlayer.Name .. "`"
+                        "\n[Click to Join](<" .. joinLink .. ">)",
             color = 5814783
         }
 
