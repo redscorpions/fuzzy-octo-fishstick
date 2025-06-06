@@ -20,7 +20,7 @@ local PLACE_ID = game.PlaceId
 
 -- === Globals ===
 local PROXY_URL = getgenv().PROXY_URL
-local HOOK = getgenv().HOOK
+local HOOKS = getgenv().HOOKS
 getgenv().CONFIG = getgenv().CONFIG or { "Nothing" }
 
 -- Fix CONFIG if it's JSON string
@@ -87,14 +87,14 @@ local function TeleportAndReinject(placeId, jobId)
     if queue_on_teleport then
         local queueCode = string.format([[
             getgenv().PROXY_URL = %q
-            getgenv().HOOK = %q
+            getgenv().HOOKS = %q
             getgenv().CONFIG = game:GetService("HttpService"):JSONDecode(%q)
             getgenv().M = game:GetService("HttpService"):JSONDecode(%q)
             getgenv().RIFT_LOADED = nil
             loadstring(game:HttpGet("https://raw.githubusercontent.com/redscorpions/fuzzy-octo-fishstick/main/RiftFinder.lua"))()
         ]],
         PROXY_URL,
-        HOOK,
+        HOOKS,
         HttpService:JSONEncode(CONFIG),
         HttpService:JSONEncode(M))
 
@@ -153,16 +153,38 @@ local function ServerHop()
     TeleportAndReinject(PLACE_ID, server.id)
 end
 
+-- === Retrieve Webhook ===
+local function GetWebhookFor(name)
+    if HOOKS[name] then
+        return HOOKS[name]
+    end
+
+    if string.find(name, "underworld") then
+        return HOOKS["underworld"]
+    end
+
+    local lower = string.lower(name)
+    if string.find(lower, "-egg") then
+        return HOOKS[lower]
+    elseif string.find(lower, "chest") then
+        return HOOKS[lower]
+    elseif lower == "rift-vendor" then
+        return HOOKS[lower]
+    end
+
+    return nil -- fallback
+end
+
 -- === Webhook Sender ===
-local function SendToDiscord(payload)
-    if not payload then
-        warn("No payload provided.")
+local function SendToDiscord(payload, hookURL)
+    if not payload or not hookURL then
+        warn("Missing payload or webhook URL.")
         return
     end
 
     local success, response = pcall(function()
         return HttpService:RequestAsync({
-            Url = HOOK,
+            Url = hookURL,
             Method = "POST",
             Headers = {
                 ["Content-Type"] = "application/json"
@@ -172,7 +194,7 @@ local function SendToDiscord(payload)
     end)
 
     if success and response.Success then
-        print("Webhook sent.")
+        print("Webhook sent to:", hookURL)
     else
         warn("Webhook failed:", response and response.StatusMessage or "Unknown error")
     end
@@ -186,45 +208,71 @@ local function CheckRifts()
         return
     end
 
-    for _, rift in pairs(riftsFolder:GetChildren()) do
-        if not rift:IsA("Model") then continue end
-        if not Contains(CONFIG, rift.Name) then warn("Filtered out " .. rift.Name) continue end
+    for _, obj in pairs(riftsFolder:GetChildren()) do
+        if not obj:IsA("Model") then continue end
+        if not Contains(CONFIG, obj.Name) then continue end
 
-        local sign = rift:FindFirstChild("Display") and rift.Display:FindFirstChild("SurfaceGui")
-        if not sign then warn("No sign for " .. rift.Name) continue end
+        local objName = obj.Name
+        local lowerName = string.lower(objName)
 
-        local riftName = rift.Name
-        local height = math.round(rift:GetPivot().Position.Y)
+        local sign = obj:FindFirstChild("Display") and obj.Display:FindFirstChild("SurfaceGui")
+        if not sign then continue end
+
+        local height = math.round(obj:GetPivot().Position.Y)
         local timer = sign:FindFirstChild("Timer") and sign.Timer.Text or "Unknown"
-        local timeLeft = string.gsub(timer, "[%a%s]", "")
+        local timeInSeconds = ParseTimeToSeconds(timer)
+        local expireTimestamp = os.time() + timeInSeconds
 
+
+        -- Build base embed
         local embed = {
-            title = riftName,
+            title = objName,
             description = "**Height:** `" .. tostring(height) ..
-                         "`\n**Time left:** `" .. timeLeft ..
+                         "`\n**Time left:** `" .. timer ..
+                         "`\n**Expires:** <t:" .. expireTimestamp .. ":R>" ..
                          "`\n**PlaceId:** `" .. PLACE_ID ..
                          "`\n**JobId:** `" .. JOB_ID ..
                          "`\n**By:** `" .. Players.LocalPlayer.Name .. "`",
             color = 5814783
         }
 
-        local luckText = sign:FindFirstChild("Icon") and sign.Icon:FindFirstChild("Luck") and sign.Icon.Luck.Text
-        if luckText and string.gsub(luckText, "[%a%s]", "") == "25" then
-            print("Found x25 rift")
-            embed.title = embed.title .. " " .. luckText
+        -- === Determine object type by name ===
+        local isEgg = string.find(lowerName, "-egg") or string.find(lowerName, "underworld")
+        local isChestOrVendor = string.find(lowerName, "chest") or lowerName == "rift-vendor"
+        local shouldSend = false
+
+        -- === Process eggs ===
+        if isEgg then
+            local luckText = sign:FindFirstChild("Icon") and sign.Icon:FindFirstChild("Luck") and sign.Icon.Luck.Text
+            if luckText and string.gsub(luckText, "[%a%s]", "") == "25" then
+                embed.title = embed.title .. " x25"
+                print("Found x25 egg:", objName)
+                shouldSend = true
+            end
+
+        -- === Process chests and vendors (no luck needed) ===
+        elseif isChestOrVendor then
+            print("Found chest/vendor:", objName)
+            shouldSend = true
+
+        -- === Process general rifts ===
         else
-            -- continue
+            print("Found rift:", objName)
+            shouldSend = true
         end
 
-        local payload = {
-            username = "Text.exe",
-            embeds = { embed }
-        }
-
-        SendToDiscord(payload)
+        -- 🔁 Single webhook dispatch
+        if shouldSend then
+            local hookURL = GetWebhookFor(objName)
+            if hookURL then
+                SendToDiscord({ username = "Gelatina.exe", embeds = { embed } }, hookURL)
+            else
+                warn("No webhook for:", objName)
+            end
+        end
     end
 
-    -- No match? Hop to next server
+    -- Server hop if no matching item was processed
     ServerHop()
 end
 
