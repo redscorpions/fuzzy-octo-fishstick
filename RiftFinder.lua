@@ -85,52 +85,63 @@ end
 
 -- === Teleport and re-inject ===
 local function TeleportAndReinject(placeId, jobId)
-    if queue_on_teleport then
-        local queueCode = string.format([[
-            getgenv().PROXY_URL = %q
-            getgenv().HOOKS = game:GetService("HttpService"):JSONDecode(%q)
-            getgenv().CONFIG = game:GetService("HttpService"):JSONDecode(%q)
-            getgenv().M = game:GetService("HttpService"):JSONDecode(%q)
-            getgenv().RIFT_LOADED = nil
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/redscorpions/fuzzy-octo-fishstick/main/RiftFinder.lua"))()
-        ]],
-        PROXY_URL,
-        HttpService:JSONEncode(HOOKS),
-        HttpService:JSONEncode(CONFIG),
-        HttpService:JSONEncode(M))
-
-        queue_on_teleport(queueCode)
-    else
-        warn("queue_on_teleport not available!")
+    -- Prevent teleporting to the same server
+    if jobId == JOB_ID then
+        warn("[Teleport] Skipping current server:", jobId)
         return
     end
 
-    local success, err = pcall(function()
-        print("[Teleport] ->", jobId)
-        TeleportService:TeleportToPlaceInstance(placeId, jobId, Players.LocalPlayer)
-    end)
+    local queueCode = string.format([[
+        getgenv().PROXY_URL = %q
+        getgenv().HOOKS = game:GetService("HttpService"):JSONDecode(%q)
+        getgenv().CONFIG = game:GetService("HttpService"):JSONDecode(%q)
+        getgenv().M = game:GetService("HttpService"):JSONDecode(%q)
+        getgenv().RIFT_LOADED = nil
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/redscorpions/fuzzy-octo-fishstick/main/RiftFinder.lua"))()
+    ]],
+    PROXY_URL,
+    HttpService:JSONEncode(HOOKS),
+    HttpService:JSONEncode(CONFIG),
+    HttpService:JSONEncode(M))
 
-    if not success then
-        warn("[Teleport] -> failed: " .. tostring(err))
-        task.wait(1) -- give Roblox time to reset internal teleport state
-
-        -- Pick next server
-        M.currentServer += 1
-        if M.currentServer >= #M.serverList then
-            M.currentServer = 0
-            FetchServerList()
-        end
-
-        local nextServer = M.serverList[M.currentServer]
-        if nextServer and nextServer.id then
-            print("[Retrying teleport] ->", nextServer.id)
-            task.defer(function() -- let the event loop breathe
-                TeleportAndReinject(placeId, nextServer.id)
-            end)
+    -- Use spawn to avoid recursive stack overflow
+    spawn(function()
+        -- Only queue right before teleport
+        if queue_on_teleport then
+            queue_on_teleport(queueCode)
         else
-            warn("No valid servers left to retry.")
+            warn("queue_on_teleport not available.")
         end
-    end
+
+        -- Delay before attempting teleport to avoid 771 spam
+        task.wait(1)
+
+        local success, err = pcall(function()
+            print("[Teleport] Attempting ->", jobId)
+            TeleportService:TeleportToPlaceInstance(placeId, jobId, Players.LocalPlayer)
+        end)
+
+        if not success then
+            warn("[Teleport Failed] (" .. tostring(err) .. ")")
+
+            -- Retry with next server after delay
+            task.wait(3)
+
+            M.currentServer = M.currentServer + 1
+            if M.currentServer >= #M.serverList then
+                M.currentServer = 0
+                FetchServerList()
+            end
+
+            local nextServer = M.serverList[M.currentServer]
+            if nextServer and nextServer.id then
+                print("[Teleport Retry] Next server ->", nextServer.id)
+                TeleportAndReinject(placeId, nextServer.id)
+            else
+                warn("No valid servers left to retry.")
+            end
+        end
+    end)
 end
 
 -- === Server Hop ===
@@ -251,6 +262,7 @@ local function CheckRifts()
 
         local objName = obj.Name
         local lowerName = string.lower(objName)
+        local webhookKey = objName  -- 🔑 Start with original name
 
         local sign = obj:FindFirstChild("Display") and obj.Display:FindFirstChild("SurfaceGui")
         if not sign then continue end
@@ -265,7 +277,7 @@ local function CheckRifts()
             title = objName,
             description = "**Height:** `" .. tostring(height) .. "`" ..
                         "\n**Time left:** `" .. timer .. "`" ..
-                        "\n**Expires:** <t:" .. expireTimestamp .. ":R>" ..  -- no backticks
+                        "\n**Expires:** <t:" .. expireTimestamp .. ":R>" ..
                         "\n**PlaceId:** `" .. PLACE_ID .. "`" ..
                         "\n**JobId:** `" .. JOB_ID .. "`" ..
                         "\n**By:** `" .. Players.LocalPlayer.Name .. "`",
@@ -286,18 +298,21 @@ local function CheckRifts()
         -- === Process eggs ===
         if isEgg then
             local luckText = sign:FindFirstChild("Icon") and sign.Icon:FindFirstChild("Luck") and sign.Icon.Luck.Text
-            if luckText and string.gsub(luckText, "[%a%s]", "") == "25" then
+            local luckValue = luckText and string.gsub(luckText, "[%a%s]", "") or ""
+
+            if luckValue == "25" then
                 embed.title = embed.title .. " x25"
+                webhookKey = objName -- use the egg-specific webhook
                 print("Found x25 egg:", objName)
                 shouldSend = true
-            elseif luckText and string.gsub(luckText, "[%a%s]", "") == "10" then
-                embed.title = "x10"
-                objName = "x10"
+            elseif luckValue == "10" then
+                embed.title = objName .. " x10"
+                webhookKey = "x10"
                 print("Found x10 egg:", objName)
                 shouldSend = true
-            elseif luckText and string.gsub(luckText, "[%a%s]", "") == "5" then
-                embed.title = "x5"
-                objName = "x5"
+            elseif luckValue == "5" then
+                embed.title = objName .. " x5"
+                webhookKey = "x5"
                 print("Found x5 egg:", objName)
                 shouldSend = true
             end
@@ -315,11 +330,11 @@ local function CheckRifts()
 
         -- 🔁 Single webhook dispatch
         if shouldSend then
-            local hookURL = GetWebhookFor(objName)
+            local hookURL = GetWebhookFor(webhookKey)  -- ✅ Use correct hook key
             if hookURL then
                 SendToDiscord({ username = "Gelatina.exe", embeds = { embed } }, hookURL)
             else
-                warn("No webhook for:", objName)
+                warn("No webhook for:", webhookKey)
             end
         end
     end
