@@ -200,6 +200,19 @@ local function SendToDiscord(payload, hookURL)
     end
 end
 
+-- === Parse Time ===
+local function ParseTimeToSeconds(timeStr)
+    local num = tonumber(string.match(timeStr, "%d+"))
+    if not num then return 0 end
+    if string.find(timeStr, "minute") then
+        return num * 60
+    elseif string.find(timeStr, "second") then
+        return num
+    else
+        return 0
+    end
+end
+
 -- === Rift Finder ===
 local function CheckRifts()
     local riftsFolder = game.Workspace:FindFirstChild("Rendered") and game.Workspace.Rendered:FindFirstChild("Rifts")
