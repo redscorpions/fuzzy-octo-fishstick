@@ -1,4 +1,3 @@
-
 -- === Prevent double execution ===
 if getgenv().RIFT_LOADED then
     warn("[RiftFinder] Already loaded. Skipping.")
@@ -265,7 +264,7 @@ local function CheckRifts()
 
         local objName = obj.Name
         local lowerName = string.lower(objName)
-        local webhookKey = objName  -- 🔑 Start with original name
+        local webhookKey = objName
 
         local sign = obj:FindFirstChild("Display") and obj.Display:FindFirstChild("SurfaceGui")
         if not sign then continue end
@@ -288,7 +287,7 @@ local function CheckRifts()
         }
 
         local joinLink = string.format(
-            "https://yourworker.workers.dev/join?placeId=%d&gameInstanceId=%s&token=%s",
+            "https://wild-union-be4a.elcombustibilefossile.workers.dev/join?placeId=%d&gameInstanceId=%s&token=%s",
             PLACE_ID,
             JOB_ID,
             getgenv().SECRET
