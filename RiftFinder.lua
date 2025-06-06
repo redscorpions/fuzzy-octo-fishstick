@@ -240,12 +240,12 @@ local function CheckRifts()
         -- Build base embed
         local embed = {
             title = objName,
-            description = "**Height:** `" .. tostring(height) ..
-                         "`\n**Time left:** `" .. timer ..
-                         "`\n**Expires:** <t:" .. expireTimestamp .. ":R>" ..
-                         "\n**PlaceId:** `" .. PLACE_ID ..
-                         "`\n**JobId:** `" .. JOB_ID ..
-                         "`\n**By:** `" .. Players.LocalPlayer.Name .. "`",
+            description = "**Height:** `" .. tostring(height) .. "`" ..
+                        "\n**Time left:** `" .. timer .. "`" ..
+                        "\n**Expires:** <t:" .. expireTimestamp .. ":R>" ..  -- no backticks
+                        "\n**PlaceId:** `" .. PLACE_ID .. "`" ..
+                        "\n**JobId:** `" .. JOB_ID .. "`" ..
+                        "\n**By:** `" .. Players.LocalPlayer.Name .. "`",
             color = 5814783
         }
 
