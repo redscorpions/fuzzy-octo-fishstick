@@ -110,8 +110,8 @@ local function TeleportAndReinject(placeId, jobId)
     end)
 
     if not success then
-        warn("Teleport failed: " .. tostring(err))
-        task.wait(2)
+        warn("[Teleport] -> failed: " .. tostring(err))
+        task.wait(5)
 
         -- Try next server
         M.currentServer = M.currentServer + 1
@@ -132,7 +132,7 @@ end
 -- === Server Hop ===
 local function ServerHop()
     if #M.serverList == 0 then
-        warn("Server list is empty.")
+        warn("[SHop] -> Server list is empty.")
         FetchServerList()
         return
     end
@@ -146,7 +146,7 @@ local function ServerHop()
 
     local server = M.serverList[M.currentServer]
     if not server or not server.id then
-        warn("Invalid server data.")
+        warn("[SHop] -> Invalid server data.")
         return
     end
 
@@ -242,7 +242,7 @@ local function CheckRifts()
             title = objName,
             description = "**Height:** `" .. tostring(height) ..
                          "`\n**Time left:** `" .. timer ..
-                         "`\n**Expires:** <t:" .. expireTimestamp .. ":R>" ..
+                         "`\n**Expires:** `<t:" .. expireTimestamp .. ":R>" ..
                          "`\n**PlaceId:** `" .. PLACE_ID ..
                          "`\n**JobId:** `" .. JOB_ID ..
                          "`\n**By:** `" .. Players.LocalPlayer.Name .. "`",
