@@ -280,8 +280,7 @@ local function CheckRifts()
                         "\n**Expires:** <t:" .. expireTimestamp .. ":R>" ..
                         "\n**PlaceId:** `" .. PLACE_ID .. "`" ..
                         "\n**JobId:** `" .. JOB_ID .. "`" ..
-                        "\n**By:** `" .. Players.LocalPlayer.Name .. "`" ..
-                        "\n[Click to Join](<" .. joinLink .. ">)", -- clickable link
+                        "\n**By:** `" .. Players.LocalPlayer.Name .. "`",
             color = 5814783
         }
 
@@ -343,7 +342,7 @@ local function CheckRifts()
 
         -- 🔁 Single webhook dispatch
         if shouldSend then
-            local hookURL = GetWebhookFor(webhookKey)  -- ✅ Use correct hook key
+            local hookURL = GetWebhookFor(webhookKey)
             if hookURL then
                 SendToDiscord({ username = "Gelatina.exe", embeds = { embed } }, hookURL)
             else
