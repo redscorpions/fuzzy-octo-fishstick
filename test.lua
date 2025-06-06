@@ -7,7 +7,12 @@ if not game:IsLoaded() then game.Loaded:Wait() end
 task.wait(1)
 
 print("[test.lua] Re-injected successfully")
-print("CONFIG value:", table.concat(getgenv().CONFIG, ", "))
+
+if typeof(getgenv().CONFIG) == "table" then
+    print("CONFIG value:", table.concat(getgenv().CONFIG, ", "))
+else
+    warn("CONFIG is not a table:", typeof(getgenv().CONFIG))
+end
 
 -- Services
 local TeleportService = game:GetService("TeleportService")
@@ -34,7 +39,7 @@ if queue_on_teleport then
     print("[Teleport] queue_on_teleport is available")
 
     local queueCode = string.format([[
-        getgenv().CONFIG = %s
+        getgenv().CONFIG = game:GetService("HttpService"):JSONDecode(%q)
         getgenv().TEST_LOADED = nil
         loadstring(game:HttpGet("https://raw.githubusercontent.com/redscorpions/fuzzy-octo-fishstick/main/test.lua"))()
     ]], HttpService:JSONEncode(getgenv().CONFIG))
