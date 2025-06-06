@@ -296,7 +296,7 @@ local function CheckRifts()
 
         embed.fields = { {
             name = "Join Link",
-            value = "[Click here to join the server](" .. robloxJoinLink .. ")",
+            value = "[Click here to join the server](" .. joinLink .. ")",
             inline = false
         } }
 
