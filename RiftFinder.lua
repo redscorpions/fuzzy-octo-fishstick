@@ -1,3 +1,4 @@
+
 -- === Prevent double execution ===
 if getgenv().RIFT_LOADED then
     warn("[RiftFinder] Already loaded. Skipping.")
@@ -291,10 +292,12 @@ local function CheckRifts()
                 shouldSend = true
             elseif luckText and string.gsub(luckText, "[%a%s]", "") == "10" then
                 embed.title = "x10"
+                objName = "x10"
                 print("Found x10 egg:", objName)
                 shouldSend = true
             elseif luckText and string.gsub(luckText, "[%a%s]", "") == "5" then
                 embed.title = "x5"
+                objName = "x5"
                 print("Found x5 egg:", objName)
                 shouldSend = true
             end
