@@ -1,5 +1,5 @@
 -- Prevent duplicate runs
-if getgenv().TEST_LOADED then return end
+if getgenv().TEST_LOADED then print("[test.lua] Script already injected") return end
 getgenv().TEST_LOADED = true
 
 -- Wait for game to fully load
