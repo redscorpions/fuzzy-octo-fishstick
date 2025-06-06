@@ -1,26 +1,48 @@
--- wait for game to load --
-task.wait(15)
+-- === Prevent double execution ===
+if getgenv().RIFT_LOADED then
+    warn("[RiftFinder] Already loaded. Skipping.")
+    return
+end
+getgenv().RIFT_LOADED = true
 
--- services --
+-- === Wait for game to fully load ===
+if not game:IsLoaded() then game.Loaded:Wait() end
+task.wait(1)
+
+-- === Services ===
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 
--- place info --
+-- === Place Info ===
 local JOB_ID = game.JobId
-local PLACE_ID = game.PlaceId -- Added missing PLACE_ID
+local PLACE_ID = game.PlaceId
 
--- config --
+-- === Globals ===
 local PROXY_URL = getgenv().PROXY_URL
 local HOOK = getgenv().HOOK
+getgenv().CONFIG = getgenv().CONFIG or { "Nothing" }
+
+-- Fix CONFIG if it's JSON string
+if typeof(getgenv().CONFIG) == "string" then
+    local success, result = pcall(function()
+        return HttpService:JSONDecode(getgenv().CONFIG)
+    end)
+    if success then
+        getgenv().CONFIG = result
+    else
+        warn("Invalid CONFIG JSON. Using fallback.")
+        getgenv().CONFIG = { "Nothing" }
+    end
+end
 local CONFIG = getgenv().CONFIG
 
--- private globals --
-local M = getgenv().M or {}
-getgenv().M = M
-
+-- === Shared state ===
+getgenv().M = getgenv().M or {}
+local M = getgenv().M
 M.currentServer = M.currentServer or 0
 
+-- === Fetch server list if needed ===
 if not M.serverList then
     local success, response = pcall(function()
         return HttpService:RequestAsync({
@@ -34,19 +56,19 @@ if not M.serverList then
 
     if success and response.Success then
         local data = HttpService:JSONDecode(response.Body)
-        M.serverList = data.data
+        M.serverList = data.data or {}
     else
-        warn("Failed to get server list: "..tostring(response and response.StatusMessage or "Unknown error"))
+        warn("Failed to get server list: " .. tostring(response and response.StatusMessage or "Unknown error"))
         M.serverList = {}
     end
 end
 
+-- === Debug: Print server list ===
 for i, v in pairs(M.serverList) do
-    print(i, v.id)
-    print(v.id, v.maxPlayers, v.ping, v.fps, v.playing)
+    print(i, v.id, v.maxPlayers, v.ping, v.fps, v.playing)
 end
 
--- auxiliary --
+-- === Helpers ===
 local function Contains(tbl, value)
     for _, v in ipairs(tbl) do
         if v == value then
@@ -56,48 +78,67 @@ local function Contains(tbl, value)
     return false
 end
 
--- server hop --
+-- === Teleport and re-inject ===
+local function TeleportAndReinject(placeId, jobId)
+    if queue_on_teleport then
+        local queueCode = string.format([[
+            getgenv().PROXY_URL = %q
+            getgenv().HOOK = %q
+            getgenv().CONFIG = game:GetService("HttpService"):JSONDecode(%q)
+            getgenv().M = game:GetService("HttpService"):JSONDecode(%q)
+            getgenv().RIFT_LOADED = nil
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/redscorpions/fuzzy-octo-fishstick/main/RiftFinder.lua"))()
+        ]],
+        PROXY_URL,
+        HOOK,
+        HttpService:JSONEncode(CONFIG),
+        HttpService:JSONEncode(M))
+
+        queue_on_teleport(queueCode)
+    else
+        warn("queue_on_teleport not available!")
+        return
+    end
+
+    local success, err = pcall(function()
+        print("[Teleport] ->", jobId)
+        TeleportService:TeleportToPlaceInstance(placeId, jobId, Players.LocalPlayer)
+    end)
+
+    if not success then
+        warn("Teleport failed: " .. tostring(err))
+    end
+end
+
+-- === Server Hop ===
 local function ServerHop()
-    -- manage server index --
+    if #M.serverList == 0 then
+        warn("Server list is empty.")
+        return
+    end
+
     if M.currentServer >= #M.serverList then
         M.currentServer = 0
     else
         M.currentServer = M.currentServer + 1
     end
 
-    -- queue the script to run after teleport
-    if queue_on_teleport then
-        -- queue_on_teleport(string.format([[
-        --     getgenv().PROXY_URL = %q
-        --     getgenv().HOOK = %q
-        --     getgenv().CONFIG = %q
-        --     getgenv().M = %s
-        --     loadstring(game:HttpGet('https://raw.githubusercontent.com/redscorpions/fuzzy-octo-fishstick/refs/heads/main/RiftFinder.lua'))()
-        -- ]], 
-        -- PROXY_URL,
-        -- HOOK,
-        -- HttpService:JSONEncode(CONFIG),
-        -- HttpService:JSONEncode(M)))
-        queue_on_teleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/redscorpions/fuzzy-octo-fishstick/refs/heads/main/RiftFinder.lua'))()")
+    local server = M.serverList[M.currentServer]
+    if not server or not server.id then
+        warn("Invalid server data")
+        return
     end
 
-    -- perform the teleport
-    local success, err = pcall(function()
-        print(M.serverList[M.currentServer].id)
-        TeleportService:TeleportToPlaceInstance(PLACE_ID, M.serverList[M.currentServer].id, Players.LocalPlayer)
-    end)
-
-    if not success then
-        warn("Experienced a problem while server hopping: " .. tostring(err))
-    else
-        print("Teleport successfull")
-    end
+    TeleportAndReinject(PLACE_ID, server.id)
 end
 
--- send webhook --
+-- === Webhook Sender ===
 local function SendToDiscord(payload)
-    if not payload then warn("No payload provided") return end
-    
+    if not payload then
+        warn("No payload provided.")
+        return
+    end
+
     local success, response = pcall(function()
         return HttpService:RequestAsync({
             Url = HOOK,
@@ -109,31 +150,27 @@ local function SendToDiscord(payload)
         })
     end)
 
-    if success then
-        if response.Success then
-            print("Webhook sent successfully")
-        else
-            warn("Webhook request failed: "..response.StatusMessage)
-        end
+    if success and response.Success then
+        print("Webhook sent.")
     else
-        warn("Failed to send webhook: " .. tostring(response))
+        warn("Webhook failed:", response and response.StatusMessage or "Unknown error")
     end
 end
 
--- rifts --
-local riftsFolder = game.Workspace:FindFirstChild("Rendered"):FindFirstChild("Rifts")
-
--- find config rifts --
+-- === Rift Finder ===
 local function CheckRifts()
-    if not riftsFolder then warn("No folder found for rifts") return end
+    local riftsFolder = game.Workspace:FindFirstChild("Rendered") and game.Workspace.Rendered:FindFirstChild("Rifts")
+    if not riftsFolder then
+        warn("No folder found for rifts.")
+        return
+    end
 
-    -- check for x25 servers --
     for _, rift in pairs(riftsFolder:GetChildren()) do
         if not rift:IsA("Model") then continue end
-        if not Contains(CONFIG, rift.Name) then warn("Filtering " .. rift.Name) continue end
+        if not Contains(CONFIG, rift.Name) then warn("Filtered out " .. rift.Name) continue end
 
         local sign = rift:FindFirstChild("Display") and rift.Display:FindFirstChild("SurfaceGui")
-        if not sign then warn("No sign found for " .. rift.Name) continue end
+        if not sign then warn("No sign for " .. rift.Name) continue end
 
         local riftName = rift.Name
         local height = math.round(rift:GetPivot().Position.Y)
@@ -142,23 +179,21 @@ local function CheckRifts()
 
         local embed = {
             title = riftName,
-            description = "**Height:** `" .. tostring(height) .. 
-            "`\n**Time left:** `" .. timeLeft .. 
-            "`\n**PlaceId:** `" .. PLACE_ID .. 
-            "`\n**JobId:** `" .. JOB_ID .. 
-            "`\n**By:** `" .. Players.LocalPlayer.Name .. "`",
+            description = "**Height:** `" .. tostring(height) ..
+                         "`\n**Time left:** `" .. timeLeft ..
+                         "`\n**PlaceId:** `" .. PLACE_ID ..
+                         "`\n**JobId:** `" .. JOB_ID ..
+                         "`\n**By:** `" .. Players.LocalPlayer.Name .. "`",
             color = 5814783
         }
 
         local luckText = sign:FindFirstChild("Icon") and sign.Icon:FindFirstChild("Luck") and sign.Icon.Luck.Text
-        if luckText then
-            if string.gsub(luckText, "[%a%s]", "") == "25" then
-                print("Found x25 rift")
-                embed.title = embed.title .. " " .. luckText
-            end
+        if luckText and string.gsub(luckText, "[%a%s]", "") == "25" then
+            print("Found x25 rift")
+            embed.title = embed.title .. " " .. luckText
         end
-      
-        payload = {
+
+        local payload = {
             username = "Text.exe",
             embeds = { embed }
         }
@@ -166,10 +201,10 @@ local function CheckRifts()
         SendToDiscord(payload)
     end
 
-    -- server hop if no rifts found --
+    -- No match? Hop to next server
     ServerHop()
 end
 
--- wait for game to load --
-print("Checking...")
+-- === Begin Script ===
+print("[RiftFinder] Checking...")
 CheckRifts()
