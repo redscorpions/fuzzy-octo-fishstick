@@ -87,14 +87,14 @@ local function TeleportAndReinject(placeId, jobId)
     if queue_on_teleport then
         local queueCode = string.format([[
             getgenv().PROXY_URL = %q
-            getgenv().HOOKS = %q
+            getgenv().HOOKS = game:GetService("HttpService"):JSONDecode(%q)
             getgenv().CONFIG = game:GetService("HttpService"):JSONDecode(%q)
             getgenv().M = game:GetService("HttpService"):JSONDecode(%q)
             getgenv().RIFT_LOADED = nil
             loadstring(game:HttpGet("https://raw.githubusercontent.com/redscorpions/fuzzy-octo-fishstick/main/RiftFinder.lua"))()
         ]],
         PROXY_URL,
-        HOOKS,
+        HttpService:JSONEncode(HOOKS),
         HttpService:JSONEncode(CONFIG),
         HttpService:JSONEncode(M))
 
