@@ -1,3 +1,4 @@
+
 -- === Prevent double execution ===
 if getgenv().RIFT_LOADED then
     warn("[RiftFinder] Already loaded. Skipping.")
@@ -261,7 +262,7 @@ local function CheckRifts()
 
         local objName = obj.Name
         local lowerName = string.lower(objName)
-        local webhookKey = objName
+        local webhookKey = objName  -- 🔑 Start with original name
 
         local sign = obj:FindFirstChild("Display") and obj.Display:FindFirstChild("SurfaceGui")
         if not sign then continue end
@@ -282,7 +283,7 @@ local function CheckRifts()
                         "\n**PlaceId:** `" .. PLACE_ID .. "`" ..
                         "\n**JobId:** `" .. JOB_ID .. "`" ..
                         "\n**By:** `" .. Players.LocalPlayer.Name .. "`" ..
-                        "\n[Click to Join](<" .. joinLink .. ">)",
+                        "\n[Click to Join](<" .. joinLink .. ">)", -- clickable link
             color = 5814783
         }
 
