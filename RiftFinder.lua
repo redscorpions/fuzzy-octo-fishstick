@@ -272,12 +272,6 @@ local function CheckRifts()
         local timeInSeconds = ParseTimeToSeconds(timer)
         local expireTimestamp = os.time() + timeInSeconds
 
-        local robloxJoinLink = string.format(
-            "https://www.roblox.com/games/%d/Join?gameInstanceId=%s",
-            PLACE_ID,
-            JOB_ID
-        )
-
         -- Build base embed
         local embed = {
             title = objName,
@@ -290,6 +284,12 @@ local function CheckRifts()
                         "\n[Click to Join](<" .. joinLink .. ">)", -- clickable link
             color = 5814783
         }
+
+        local robloxJoinLink = string.format(
+            "https://www.roblox.com/games/%d/Join?gameInstanceId=%s",
+            PLACE_ID,
+            JOB_ID
+        )
 
         embed.fields = {{
             name = "Join Link",
@@ -343,7 +343,7 @@ local function CheckRifts()
 
         -- 🔁 Single webhook dispatch
         if shouldSend then
-            local hookURL = GetWebhookFor(webhookKey)
+            local hookURL = GetWebhookFor(webhookKey)  -- ✅ Use correct hook key
             if hookURL then
                 SendToDiscord({ username = "Gelatina.exe", embeds = { embed } }, hookURL)
             else
