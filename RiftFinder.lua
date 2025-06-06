@@ -281,7 +281,7 @@ local function CheckRifts()
                         "\n**Expires:** <t:" .. expireTimestamp .. ":R>" ..
                         "\n**PlaceId:** `" .. PLACE_ID .. "`" ..
                         "\n**JobId:** `" .. JOB_ID .. "`" ..
-                        "\n**By:** `" .. Players.LocalPlayer.Name .. "`"
+                        "\n**By:** `" .. Players.LocalPlayer.Name .. "`" ..
                         "\n[Click to Join](<" .. joinLink .. ">)",
             color = 5814783
         }
