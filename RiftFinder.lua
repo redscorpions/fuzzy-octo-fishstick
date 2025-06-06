@@ -229,7 +229,7 @@ local IMAGES = {
     ["underworld-3"] = "https://static.wikia.nocookie.net/bgs-infinity/images/f/ff/Underworld_Egg.png/revision/latest?cb=20250510201410",
     ["bubble-rift"] = "https://static.wikia.nocookie.net/bgs-infinity/images/0/0c/Bubbles.png/revision/latest/scale-to-width-down/25?cb=20250430031457",
     ["royal-chest"] = "https://static.wikia.nocookie.net/bgs-infinity/images/e/eb/Royal_Key.png/revision/latest?cb=20250412204328",
-    ["dice-chest"] = "https://static.wikia.nocookie.net/bgs-infinity/images/e/e4/Dice_Key.png/revision/latest?cb=20250505071325"
+    ["dice-chest"] = "https://static.wikia.nocookie.net/bgs-infinity/images/e/e4/Dice_Key.png/revision/latest?cb=20250505071325",
     ["rift-vendor"] = "https://static.wikia.nocookie.net/bgs-infinity/images/7/73/Fruit_Egg.png/revision/latest?cb=20250525203558",
 }
 
