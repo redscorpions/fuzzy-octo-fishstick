@@ -111,20 +111,23 @@ local function TeleportAndReinject(placeId, jobId)
 
     if not success then
         warn("[Teleport] -> failed: " .. tostring(err))
-        task.wait(5)
+        task.wait(1) -- give Roblox time to reset internal teleport state
 
-        -- Try next server
-        M.currentServer = M.currentServer + 1
+        -- Pick next server
+        M.currentServer += 1
         if M.currentServer >= #M.serverList then
             M.currentServer = 0
-            FetchServerList() -- Refresh the list
+            FetchServerList()
         end
 
         local nextServer = M.serverList[M.currentServer]
         if nextServer and nextServer.id then
-            TeleportAndReinject(placeId, nextServer.id)
+            print("[Retrying teleport] ->", nextServer.id)
+            task.defer(function() -- let the event loop breathe
+                TeleportAndReinject(placeId, nextServer.id)
+            end)
         else
-            warn("No valid servers left.")
+            warn("No valid servers left to retry.")
         end
     end
 end
