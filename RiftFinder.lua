@@ -256,12 +256,6 @@ local function CheckRifts()
         local timeInSeconds = ParseTimeToSeconds(timer)
         local expireTimestamp = os.time() + timeInSeconds
 
-        -- === Add Image ===
-        local imageURL = IMAGES[objName]
-        if imageURL then
-            embed.image = { url = imageURL }
-        end
-
         -- Build base embed
         local embed = {
             title = objName,
@@ -273,6 +267,12 @@ local function CheckRifts()
                         "\n**By:** `" .. Players.LocalPlayer.Name .. "`",
             color = 5814783
         }
+
+        -- === Add Image ===
+        local imageURL = IMAGES[objName]
+        if imageURL then
+            embed.image = { url = imageURL }
+        end
 
         -- === Determine object type by name ===
         local isEgg = string.find(lowerName, "-egg") or string.find(lowerName, "underworld")
