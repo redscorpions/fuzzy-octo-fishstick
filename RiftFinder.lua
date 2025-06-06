@@ -1,4 +1,3 @@
-
 -- === Prevent double execution ===
 if getgenv().RIFT_LOADED then
     warn("[RiftFinder] Already loaded. Skipping.")
@@ -8,7 +7,7 @@ getgenv().RIFT_LOADED = true
 
 -- === Wait for game to fully load ===
 if not game:IsLoaded() then game.Loaded:Wait() end
-task.wait(1)
+task.wait(3)
 
 -- === Services ===
 local HttpService = game:GetService("HttpService")
@@ -284,17 +283,21 @@ local function CheckRifts()
             color = 5814783
         }
 
-        local robloxJoinLink = string.format(
-            "https://www.roblox.com/games/%d/Join?gameInstanceId=%s",
-            PLACE_ID,
-            JOB_ID
-        )
+        if not PLACE_ID or not JOB_ID then
+            warn("[Webhook] PLACE_ID or JOB_ID is missing. Skipping embed field.")
+        else
+            local robloxJoinLink = string.format(
+                "https://www.roblox.com/games/%d/Join?gameInstanceId=%s",
+                PLACE_ID,
+                JOB_ID
+            )
 
-        embed.fields = {{
-            name = "Join Link",
-            value = "[Click here to join the server](" .. robloxJoinLink .. ")",
-            inline = false
-        }}
+            embed.fields = { {
+                name = "Join Link",
+                value = "[Click here to join the server](" .. robloxJoinLink .. ")",
+                inline = false
+            } }
+        end
 
         -- === Add Image ===
         local imageURL = IMAGES[objName]
