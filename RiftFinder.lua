@@ -242,8 +242,8 @@ local function CheckRifts()
             title = objName,
             description = "**Height:** `" .. tostring(height) ..
                          "`\n**Time left:** `" .. timer ..
-                         "`\n**Expires:** `<t:" .. expireTimestamp .. ":R>" ..
-                         "`\n**PlaceId:** `" .. PLACE_ID ..
+                         "`\n**Expires:** <t:" .. expireTimestamp .. ":R>" ..
+                         "\n**PlaceId:** `" .. PLACE_ID ..
                          "`\n**JobId:** `" .. JOB_ID ..
                          "`\n**By:** `" .. Players.LocalPlayer.Name .. "`",
             color = 5814783
