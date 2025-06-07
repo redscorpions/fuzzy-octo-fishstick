@@ -309,11 +309,11 @@ local function CheckRifts()
         -- Build base embed
         local embed = {
             title = objName,
-            description = "📏**Height:** `" .. tostring(height) .. "`" ..
-                        "\n\n⌚**Expires:** <t:" .. expireTimestamp .. ":R>" ..
-                        "\n\n🫆**JobId:** `" .. JOB_ID .. "`" ..
-                        "\n\n🧍**Players:** `" .. #(Players:GetPlayers()) .. "/12`" ..
-                        "\n\n**By:** `" .. censoredName .. "`",
+            description = "📏 **Height:** `" .. tostring(height) .. "`" ..
+                        "\n⌚ **Expires:** <t:" .. expireTimestamp .. ":R>" ..
+                        "\n🕵️ **JobId:** `" .. JOB_ID .. "`" ..
+                        "\n🧍 **Players:** `" .. #(Players:GetPlayers()) .. "/12`" ..
+                        "\n**By:** `" .. censoredName .. "`",
             color = 5814783
         }
 
@@ -323,12 +323,8 @@ local function CheckRifts()
             JOB_ID
         )
 
-        print("Join link is:", joinLink)
-        assert(type(joinLink) == "string", "Join link is not a string")
-
-
         embed.fields = { {
-            name = "Join Link",
+            name = "🔗 Join Link",
             value = "[Click here to join the server](" .. joinLink .. ")",
             inline = false
         } }
