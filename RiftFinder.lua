@@ -174,7 +174,9 @@ end
 local function ServerHop()
     if #M.serverList == 0 then
         warn("[SHop] -> Server list is empty.")
-        FetchServerList()
+        task.delay(5, function()
+            FetchServerList()
+        end)
         return
     end
 
@@ -188,6 +190,9 @@ local function ServerHop()
     local server = M.serverList[M.currentServer]
     if not server or not server.id then
         warn("[SHop] -> Invalid server data.")
+        task.delay(3, function()
+            ServerHop()
+        end)
         return
     end
 
