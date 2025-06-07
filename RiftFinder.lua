@@ -41,6 +41,10 @@ local CONFIG = getgenv().CONFIG
 -- === Shared state ===
 getgenv().M = getgenv().M or {}
 local M = getgenv().M
+
+M.failedServers = M.failedServers or {}
+local failedServers = M.failedServers
+
 M.currentServer = M.currentServer or 0
 
 -- === Fetch server list if needed ===
@@ -84,10 +88,16 @@ local function Contains(tbl, value)
 end
 
 -- === Teleport and re-inject ===
+local failedServers = {}
+
 local function TeleportAndReinject(placeId, jobId)
-    -- Prevent teleporting to the same server
     if jobId == JOB_ID then
         warn("[Teleport] Skipping current server:", jobId)
+        return
+    end
+
+    if failedServers[jobId] then
+        warn("[Teleport] Skipping previously failed server:", jobId)
         return
     end
 
@@ -106,16 +116,13 @@ local function TeleportAndReinject(placeId, jobId)
     HttpService:JSONEncode(CONFIG),
     HttpService:JSONEncode(M))
 
-    -- Use spawn to avoid recursive stack overflow
     spawn(function()
-        -- Only queue right before teleport
         if queue_on_teleport then
             queue_on_teleport(queueCode)
         else
             warn("queue_on_teleport not available.")
         end
 
-        -- Delay before attempting teleport to avoid 771 spam
         task.wait(1)
 
         local success, err = pcall(function()
@@ -125,23 +132,24 @@ local function TeleportAndReinject(placeId, jobId)
 
         if not success then
             warn("[Teleport Failed] (" .. tostring(err) .. ")")
+            failedServers[jobId] = true -- Mark server as failed
 
-            -- Retry with next server after delay
-            task.wait(3)
+            -- Retry next server
+            task.delay(3, function()
+                M.currentServer = M.currentServer + 1
+                if M.currentServer >= #M.serverList then
+                    M.currentServer = 0
+                    FetchServerList()
+                end
 
-            M.currentServer = M.currentServer + 1
-            if M.currentServer >= #M.serverList then
-                M.currentServer = 0
-                FetchServerList()
-            end
-
-            local nextServer = M.serverList[M.currentServer]
-            if nextServer and nextServer.id then
-                print("[Teleport Retry] Next server ->", nextServer.id)
-                TeleportAndReinject(placeId, nextServer.id)
-            else
-                warn("No valid servers left to retry.")
-            end
+                local nextServer = M.serverList[M.currentServer]
+                if nextServer and nextServer.id and not failedServers[nextServer.id] then
+                    print("[Retrying teleport to next server] ->", nextServer.id)
+                    TeleportAndReinject(placeId, nextServer.id)
+                else
+                    warn("No valid servers left to retry.")
+                end
+            end)
         end
     end)
 end
@@ -274,9 +282,6 @@ local function CheckRifts()
         local timeInSeconds = ParseTimeToSeconds(timer)
         local expireTimestamp = os.time() + timeInSeconds
 
-        local name = Players.LocalPlayer.Name
-        local censoredName = name:sub(1, 1) .. string.rep("*", #name - 2) .. name:sub(-1)
-        
         -- Build base embed
         local embed = {
             title = objName,
@@ -285,7 +290,7 @@ local function CheckRifts()
                         "\n**Expires:** <t:" .. expireTimestamp .. ":R>" ..
                         "\n**PlaceId:** `" .. PLACE_ID .. "`" ..
                         "\n**JobId:** `" .. JOB_ID .. "`" ..
-                        "\n**By:** `" .. censoredName .. "`",
+                        "\n**By:** `" .. Players.LocalPlayer.Name .. "`",
             color = 5814783
         }
 
