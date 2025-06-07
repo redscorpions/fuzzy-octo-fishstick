@@ -313,7 +313,7 @@ local function CheckRifts()
                         "\n**Expires:** <t:" .. expireTimestamp .. ":R>" ..
                         "\n**PlaceId:** `" .. PLACE_ID .. "`" ..
                         "\n**JobId:** `" .. JOB_ID .. "`" ..
-                        "\n**Players:** `" .. #Players:GetPlayers() .. "/12`" ..
+                        "\n**Players:** `" .. #(Players:GetPlayers()) .. "/12`" ..
                         "\n**By:** `" .. censoredName .. "`",
             color = 5814783
         }
