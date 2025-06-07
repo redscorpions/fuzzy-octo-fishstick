@@ -84,6 +84,8 @@ local function Contains(tbl, value)
 end
 
 -- === Teleport and re-inject ===
+local failedServers = {}
+
 local function RetryTeleport(placeId)
     M.currentServer = M.currentServer + 1
     if M.currentServer > #M.serverList then
