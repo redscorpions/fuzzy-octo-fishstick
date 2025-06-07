@@ -283,7 +283,7 @@ local function CheckRifts()
         local expireTimestamp = os.time() + timeInSeconds
 
         local name = Players.LocalPlayer.Name
-        local hidden = name:sub(1, 1) .. "*":rep(8) .. name:sub(-1)
+        local hidden = name:sub(1, 1) .. "********" .. name:sub(-1)
 
         -- Build base embed
         local embed = {
