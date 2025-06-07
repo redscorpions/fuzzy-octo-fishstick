@@ -310,7 +310,6 @@ local function CheckRifts()
         local embed = {
             title = objName,
             description = "**Height:** `" .. tostring(height) .. "`" ..
-                        "\n**Time left:** `" .. timer .. "`" ..
                         "\n**Expires:** <t:" .. expireTimestamp .. ":R>" ..
                         "\n**PlaceId:** `" .. PLACE_ID .. "`" ..
                         "\n**JobId:** `" .. JOB_ID .. "`" ..
