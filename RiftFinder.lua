@@ -311,7 +311,6 @@ local function CheckRifts()
             title = objName,
             description = "**Height:** `" .. tostring(height) .. "`" ..
                         "\n**Expires:** <t:" .. expireTimestamp .. ":R>" ..
-                        "\n**PlaceId:** `" .. PLACE_ID .. "`" ..
                         "\n**JobId:** `" .. JOB_ID .. "`" ..
                         "\n**Players:** `" .. #(Players:GetPlayers()) .. "/12`" ..
                         "\n**By:** `" .. censoredName .. "`",
