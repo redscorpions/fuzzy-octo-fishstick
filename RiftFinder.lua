@@ -116,7 +116,7 @@ local function TeleportAndReinject(placeId, jobId)
     HttpService:JSONEncode(CONFIG),
     HttpService:JSONEncode(M))
 
-    spawn(function()
+    task.spawn(function()
         if queue_on_teleport then
             queue_on_teleport(queueCode)
         else
