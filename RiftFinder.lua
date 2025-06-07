@@ -92,7 +92,7 @@ local function TeleportAndReinject(placeId, jobId)
     end
 
     local queueCode = string.format([[
-        getgenv().SECRET = %s
+        getgenv().SECRET = %q
         getgenv().PROXY_URL = %q
         getgenv().HOOKS = game:GetService("HttpService"):JSONDecode(%q)
         getgenv().CONFIG = game:GetService("HttpService"):JSONDecode(%q)
