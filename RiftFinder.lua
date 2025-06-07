@@ -289,8 +289,12 @@ local function CheckRifts()
         local joinLink = string.format(
             "https://wild-union-be4a.elcombustibilefossile.workers.dev/join?placeId=%d&gameInstanceId=%s",
             PLACE_ID,
-            JOB_ID,
+            JOB_ID
         )
+
+        print("Join link is:", joinLink)
+        assert(type(joinLink) == "string", "Join link is not a string")
+
 
         embed.fields = { {
             name = "Join Link",
