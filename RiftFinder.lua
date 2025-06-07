@@ -312,7 +312,7 @@ local function CheckRifts()
             description = "**Height:** `" .. tostring(height) .. "`" ..
                         "\n**Expires:** <t:" .. expireTimestamp .. ":R>" ..
                         "\n**JobId:** `" .. JOB_ID .. "`" ..
-                        "\n**Players:** `" .. #(Players:GetPlayers()) .. "/12`" ..
+                        "\n🧍**Players:** `" .. #(Players:GetPlayers()) .. "/12`" ..
                         "\n**By:** `" .. censoredName .. "`",
             color = 5814783
         }
