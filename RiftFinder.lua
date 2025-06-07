@@ -287,10 +287,9 @@ local function CheckRifts()
         }
 
         local joinLink = string.format(
-            "https://wild-union-be4a.elcombustibilefossile.workers.dev/join?placeId=%d&gameInstanceId=%s&token=%s",
+            "https://wild-union-be4a.elcombustibilefossile.workers.dev/join?placeId=%d&gameInstanceId=%s",
             PLACE_ID,
             JOB_ID,
-            getgenv().SECRET
         )
 
         embed.fields = { {
