@@ -116,7 +116,7 @@ local function TeleportAndReinject(placeId, jobId)
     HttpService:JSONEncode(CONFIG),
     HttpService:JSONEncode(M))
 
-    task.spawn(function()
+    spawn(function()
         if queue_on_teleport then
             queue_on_teleport(queueCode)
         else
@@ -255,7 +255,7 @@ local IMAGES = {
     ["bubble-rift"] = "https://static.wikia.nocookie.net/bgs-infinity/images/0/0c/Bubbles.png/revision/latest/scale-to-width-down/25?cb=20250430031457",
     ["royal-chest"] = "https://static.wikia.nocookie.net/bgs-infinity/images/e/eb/Royal_Key.png/revision/latest?cb=20250412204328",
     ["dice-chest"] = "https://static.wikia.nocookie.net/bgs-infinity/images/e/e4/Dice_Key.png/revision/latest?cb=20250505071325",
-    ["rift-vendor"] = "https://static.wikia.nocookie.net/bgs-infinity/images/7/73/Fruit_Egg.png/revision/latest?cb=20250525203558"
+    ["rift-vendor"] = "https://static.wikia.nocookie.net/bgs-infinity/images/7/73/Fruit_Egg.png/revision/latest?cb=20250525203558",
 }
 
 -- === Rift Finder ===
@@ -283,7 +283,7 @@ local function CheckRifts()
         local expireTimestamp = os.time() + timeInSeconds
 
         local name = Players.LocalPlayer.Name
-        local hidden = name:sub(1, 1) .. "********" .. name:sub(-1)
+        local hidden = name.sub(1, 1) .. "********" .. name.sub(-1)
 
         -- Build base embed
         local embed = {
