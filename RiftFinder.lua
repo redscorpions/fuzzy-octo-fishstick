@@ -274,6 +274,9 @@ local function CheckRifts()
         local timeInSeconds = ParseTimeToSeconds(timer)
         local expireTimestamp = os.time() + timeInSeconds
 
+        local name = Players.LocalPlayer.Name
+        local censoredName = name:sub(1, 1) .. string.rep("*", #name - 2) .. name:sub(-1)
+        
         -- Build base embed
         local embed = {
             title = objName,
@@ -282,7 +285,7 @@ local function CheckRifts()
                         "\n**Expires:** <t:" .. expireTimestamp .. ":R>" ..
                         "\n**PlaceId:** `" .. PLACE_ID .. "`" ..
                         "\n**JobId:** `" .. JOB_ID .. "`" ..
-                        "\n**By:** `" .. Players.LocalPlayer.Name .. "`",
+                        "\n**By:** `" .. censoredName .. "`",
             color = 5814783
         }
 
