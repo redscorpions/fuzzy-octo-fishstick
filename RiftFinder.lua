@@ -148,7 +148,7 @@ local function TeleportToNext(placeId, jobId)
         end
 
         -- Listen for teleport failure
-        teleportFailedConnection = TeleportService.TeleportFailed:Connect(function(player, teleportResult)
+        teleportFailedConnection = TeleportService.TeleportInitFailed:Connect(function(player, teleportResult)
             if player == Players.LocalPlayer then
                 warn("[Teleport Failed] -> Result: " .. tostring(teleportResult) .. " for server " .. tostring(jobId))
                 failedServers[jobId] = true
