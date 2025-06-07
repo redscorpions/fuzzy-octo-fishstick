@@ -87,22 +87,6 @@ end
 local failedServers = {}
 local teleportFailedConnection
 
-local function RetryTeleport(placeId)
-    M.currentServer = M.currentServer + 1
-    if M.currentServer > #M.serverList then
-        M.currentServer = 1
-        FetchServerList()
-    end
-
-    local nextServer = M.serverList[M.currentServer]
-    if nextServer and nextServer.id and not failedServers[nextServer.id] then
-        print("[Retrying teleport to next server] ->", nextServer.id)
-        TeleportToNext(placeId, nextServer.id)
-    else
-        warn("No valid servers left to retry.")
-    end
-end
-
 local function TeleportToNext(placeId, jobId)
     -- Prevent teleporting to the same server
     if jobId == JOB_ID then
@@ -165,6 +149,22 @@ local function TeleportToNext(placeId, jobId)
         print("[Teleport] Attempting ->", jobId)
         TeleportService:TeleportToPlaceInstance(placeId, jobId, Players.LocalPlayer)
     end)
+end
+
+local function RetryTeleport(placeId)
+    M.currentServer = M.currentServer + 1
+    if M.currentServer > #M.serverList then
+        M.currentServer = 1
+        FetchServerList()
+    end
+
+    local nextServer = M.serverList[M.currentServer]
+    if nextServer and nextServer.id and not failedServers[nextServer.id] then
+        print("[Retrying teleport to next server] ->", nextServer.id)
+        TeleportToNext(placeId, nextServer.id)
+    else
+        warn("No valid servers left to retry.")
+    end
 end
 
 -- === Server Hop ===
