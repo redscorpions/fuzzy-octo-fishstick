@@ -41,10 +41,6 @@ local CONFIG = getgenv().CONFIG
 -- === Shared state ===
 getgenv().M = getgenv().M or {}
 local M = getgenv().M
-
-M.failedServers = M.failedServers or {}
-local failedServers = M.failedServers
-
 M.currentServer = M.currentServer or 0
 
 -- === Fetch server list if needed ===
@@ -88,16 +84,32 @@ local function Contains(tbl, value)
 end
 
 -- === Teleport and re-inject ===
-local failedServers = {}
+local function RetryTeleport(placeId)
+    M.currentServer = M.currentServer + 1
+    if M.currentServer > #M.serverList then
+        M.currentServer = 1
+        FetchServerList()
+    end
 
-local function TeleportAndReinject(placeId, jobId)
+    local nextServer = M.serverList[M.currentServer]
+    if nextServer and nextServer.id and not failedServers[nextServer.id] then
+        print("[Retrying teleport to next server] ->", nextServer.id)
+        TeleportToNext(placeId, nextServer.id)
+    else
+        warn("No valid servers left to retry.")
+    end
+end
+
+local function TeleportToNext(placeId, jobId)
+    -- Prevent teleporting to the same server
     if jobId == JOB_ID then
-        warn("[Teleport] Skipping current server:", jobId)
+        warn("[Teleport] -> Skipping current server:", jobId)
         return
     end
 
+    -- Prevent teleporting to previously failed servers
     if failedServers[jobId] then
-        warn("[Teleport] Skipping previously failed server:", jobId)
+        warn("[Teleport] -> Skipping previously failed server:", jobId)
         return
     end
 
@@ -116,6 +128,7 @@ local function TeleportAndReinject(placeId, jobId)
     HttpService:JSONEncode(CONFIG),
     HttpService:JSONEncode(M))
 
+    -- Use spawn to avoid recursive stack overflow
     spawn(function()
         if queue_on_teleport then
             queue_on_teleport(queueCode)
@@ -125,32 +138,29 @@ local function TeleportAndReinject(placeId, jobId)
 
         task.wait(1)
 
-        local success, err = pcall(function()
-            print("[Teleport] Attempting ->", jobId)
-            TeleportService:TeleportToPlaceInstance(placeId, jobId, Players.LocalPlayer)
+        -- Disconnect previous connection if any
+        if teleportFailedConnection then
+            teleportFailedConnection:Disconnect()
+            teleportFailedConnection = nil
+        end
+
+        -- Listen for teleport failure
+        teleportFailedConnection = TeleportService.TeleportFailed:Connect(function(player, teleportResult)
+            if player == Players.LocalPlayer then
+                warn("[Teleport Failed] -> Result: " .. tostring(teleportResult) .. " for server " .. tostring(jobId))
+                failedServers[jobId] = true
+                teleportFailedConnection:Disconnect()
+                teleportFailedConnection = nil
+
+                -- Retry after delay
+                task.delay(3, function()
+                    RetryTeleport(placeId)
+                end)
+            end
         end)
 
-        if not success then
-            warn("[Teleport Failed] (" .. tostring(err) .. ")")
-            failedServers[jobId] = true -- Mark server as failed
-
-            -- Retry next server
-            task.delay(3, function()
-                M.currentServer = M.currentServer + 1
-                if M.currentServer >= #M.serverList then
-                    M.currentServer = 0
-                    FetchServerList()
-                end
-
-                local nextServer = M.serverList[M.currentServer]
-                if nextServer and nextServer.id and not failedServers[nextServer.id] then
-                    print("[Retrying teleport to next server] ->", nextServer.id)
-                    TeleportAndReinject(placeId, nextServer.id)
-                else
-                    warn("No valid servers left to retry.")
-                end
-            end)
-        end
+        print("[Teleport] Attempting ->", jobId)
+        TeleportService:TeleportToPlaceInstance(placeId, jobId, Players.LocalPlayer)
     end)
 end
 
@@ -175,7 +185,7 @@ local function ServerHop()
         return
     end
 
-    TeleportAndReinject(PLACE_ID, server.id)
+    TeleportToNext(PLACE_ID, server.id)
 end
 
 -- === Retrieve Webhook ===
@@ -283,8 +293,8 @@ local function CheckRifts()
         local expireTimestamp = os.time() + timeInSeconds
 
         local name = Players.LocalPlayer.Name
-        local hidden = string.sub(name, 1, 1) .. "********" .. string.sub(name, -1, -1)
-
+        local censoredName = name:sub(1, 1) .. string.rep("*", #name - 2) .. name:sub(-1)
+        
         -- Build base embed
         local embed = {
             title = objName,
@@ -293,7 +303,7 @@ local function CheckRifts()
                         "\n**Expires:** <t:" .. expireTimestamp .. ":R>" ..
                         "\n**PlaceId:** `" .. PLACE_ID .. "`" ..
                         "\n**JobId:** `" .. JOB_ID .. "`" ..
-                        "\n**By:** `" .. hidden .. "`",
+                        "\n**By:** `" .. censoredName .. "`",
             color = 5814783
         }
 
@@ -302,6 +312,10 @@ local function CheckRifts()
             PLACE_ID,
             JOB_ID
         )
+
+        print("Join link is:", joinLink)
+        assert(type(joinLink) == "string", "Join link is not a string")
+
 
         embed.fields = { {
             name = "Join Link",
