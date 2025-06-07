@@ -302,7 +302,7 @@ local function CheckRifts()
         -- === Add Image ===
         local imageURL = IMAGES[objName]
         if imageURL then
-            embed.image = { url = imageURL }
+            embed.thumbnail = { url = imageURL }
         end
 
         -- === Determine object type by name ===
