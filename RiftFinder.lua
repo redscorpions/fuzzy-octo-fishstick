@@ -85,6 +85,7 @@ end
 
 -- === Teleport and re-inject ===
 local failedServers = {}
+local teleportFailedConnection
 
 local function RetryTeleport(placeId)
     M.currentServer = M.currentServer + 1
