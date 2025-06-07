@@ -282,6 +282,9 @@ local function CheckRifts()
         local timeInSeconds = ParseTimeToSeconds(timer)
         local expireTimestamp = os.time() + timeInSeconds
 
+        local name = Players.LocalPlayer.Name
+        local hidden = name:sub(1, 1) .. "*":rep(#name - 2) .. name:sub(-1)
+
         -- Build base embed
         local embed = {
             title = objName,
@@ -290,7 +293,7 @@ local function CheckRifts()
                         "\n**Expires:** <t:" .. expireTimestamp .. ":R>" ..
                         "\n**PlaceId:** `" .. PLACE_ID .. "`" ..
                         "\n**JobId:** `" .. JOB_ID .. "`" ..
-                        "\n**By:** `" .. Players.LocalPlayer.Name .. "`",
+                        "\n**By:** `" .. hidden .. "`",
             color = 5814783
         }
 
@@ -299,10 +302,6 @@ local function CheckRifts()
             PLACE_ID,
             JOB_ID
         )
-
-        print("Join link is:", joinLink)
-        assert(type(joinLink) == "string", "Join link is not a string")
-
 
         embed.fields = { {
             name = "Join Link",
